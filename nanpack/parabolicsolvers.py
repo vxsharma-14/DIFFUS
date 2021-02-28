@@ -65,29 +65,21 @@ def FTCS(Uo, diffX, diffY=None):
     to obtain the solution of the 1D or 2D diffusion equation.
 
     Call signature:
-
         FTCS(Uo, diffX, diffY)
 
     Parameters
     ----------
     Uo : 1D or 2D array (depending on the domain dimensions)
-
         The dependent variable from time level (n) within the domain.
-
     diffX : float
-
         Diffusion number for x-component of the parabolic/diffusion
         equation.
-
     diffY : float, Default=None for 1-D applications
-
         Diffusion number for y-component of the parabolic/diffusion
         equation.
-
     Returns
     -------
     U : 1D or 2D array (depending on the domain dimensions)
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
@@ -116,33 +108,24 @@ def DuFortFrankel(Uo, Uo2, diffX, diffY=None):
     to obtain the solution of the 1D or 2D diffusion equation.
 
     Call signature:
-
         DuFortFrankel(Uo, Uo2, diffX, diffY)
 
     Parameters
     ----------
     Uo : 1D or 2D array (depending on the domain dimensions)
-
         The dependent variable from time level (n) within the domain.
-
     Uo2 : 1D or 2D array
-
         The dependent variable at time level (n-1).
-
     diffX : float
-
         Diffusion number for x-component of the parabolic/diffusion
         equation.
-
     diffY : float, Default=None for 1-D applications
-
         Diffusion number for y-component of the parabolic/diffusion
         equation.
 
     Returns
     -------
     U : 1D or 2D array (depending on the domain dimensions)
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
@@ -171,29 +154,23 @@ def Laasonen(Uo, diffX):
 
     This routine uses the implicit Laasonen method
     to obtain the solution of the 1D diffusion equation.
-
     Note: Use only for 1D applications as this implicit formulation is not
     efficient for 2D. Use function ADI() instead for 2D implicit method.
 
     Call signature:
-
         Laasonen(Uo, diffX)
 
     Parameters
     ----------
     Uo : 1D array
-
         The dependent variable from time level (n) within the domain.
-
     diffX : float
-
         Diffusion number for x-component of the parabolic/diffusion
         equation.
 
     Returns
     -------
     U : 1D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
@@ -202,7 +179,7 @@ def Laasonen(Uo, diffX):
     if len(shapeU) == 2:
         print("Laasonen method is inefficient for 2D applications.\
  \nUse Alternating Direction Implicit method instead.")
-        raise DimensionError("2D", "Laasonen")
+        raise DimensionError("2D", "diffusion", "Laasonen")
     iMax, = shapeU
     U = Uo.copy()  # Initialize U
     A = [-diffX for i in range(iMax)]
@@ -221,29 +198,23 @@ def CrankNicolson(Uo, diffX):
 
     This routine uses the implicit CrankNicolson method
     to obtain the solution of the 1D diffusion equation.
-
     Note: Use only for 1D applications as this implicit formulation is not
     efficient for 2D. Use function ADI() instead for 2D implicit method.
 
     Call signature:
-
         CrankNicolson(Uo, diffX)
 
     Parameters
     ----------
     Uo : 1D array
-
         The dependent variable from time level (n) within the domain.
-
     diffX : float
-
         Diffusion number for x-component of the parabolic/diffusion
         equation.
 
     Returns
     -------
     U : 1D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
@@ -252,7 +223,7 @@ def CrankNicolson(Uo, diffX):
     if len(shapeU) == 2:
         print("Crank-Nicolson method is inefficient for 2D applications.\
  \nUse Alternating Direction Implicit method instead.")
-        raise DimensionError("2D", "Crank-Nicolson")
+        raise DimensionError("2D", "diffusion", "Crank-Nicolson")
     iMax, = shapeU
     U = Uo.copy()  # Initialize U
     dd = 0.5*diffX
@@ -273,33 +244,25 @@ def ADI(Uo, diffX, diffY):
 
     This routine uses the Alternating Direction Implicit method
     to obtain the solution of the 2D diffusion equation.
-
     Note: This formulation solves only 2D model equation.
 
     Call signature:
-
         ADI(Uo, diffX, diffY)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable from time level (n) within the domain.
-
     diffX : float
-
         Diffusion number for x-component of the parabolic/diffusion
         equation.
-
     diffY : float
-
         Diffusion number for y-component of the parabolic/diffusion
         equation.
 
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
@@ -308,7 +271,7 @@ def ADI(Uo, diffX, diffY):
     if len(shapeU) == 1:
         print("Alternating Direction Implicit method is for 2D applicat\
  ions only.")
-        raise DimensionError("1D", "ADI")
+        raise DimensionError("1D", "diffusion", "ADI")
     iMax, jMax = shapeU
     U = Uo.copy()  # Initialize U
     Uhalf = Uo.copy()  # Uhalf is U at time level (n + 1/2)

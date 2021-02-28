@@ -39,6 +39,101 @@
 #   ***********************************************************************
 
 
+def DimensionalizeSolution(Ustar, RefLength, Diff):
+    """Return the dimensional values of the velocity.
+
+    Using the expression:
+
+        u = (u*)(nu/L)
+
+    Call signature:
+
+        DimensionalizeSolution(Ustar, RefLength, Diff)
+
+    Parameters
+    ----------
+    Ustar : 1D or 2D array
+
+        Non-dimensional velocities.
+
+    RefLength: float
+
+        Reference or characteristic length.
+
+    Diff: float
+
+        Diffusion coefficient.
+
+    Returns
+    -------
+    Udim : 1D or 2D araay
+
+        Dimensional velocities.
+    """
+    from .backend.dimensionalize import NonDimensionalize
+    nd = NonDimensionalize()
+    U = nd.dimVelU(Ustar, RefLength, Diff)
+    return U
+
+
+def ComputeErrorTerm(uAna, uNum, ReturnType="abs"):
+    """Return the error term to calculate accuracy of a numerical scheme.
+
+    Calculated using one of the following expression:
+
+        Absolute Error Term = abs(U_analytical - U_numerical)
+
+                        U_analytical - U_numerical
+         % Error Term = -------------------------- * 100
+                              U_numerical
+
+    Call signature:
+
+        ComputeErrorTerm(uAna, uNum)
+
+    Parameters
+    ----------
+    uAna: 1D or 2D array
+
+        The values of the dependent variable obtained from the known exact
+        solution within the entire domain.
+
+    uNum: 1D or 2D array
+
+        The values of the dependent variable calculated using an
+        approximation method within the entire domain.
+
+    ReturnType: str, Default="abs"
+
+        Allowed inputs = "%" or "abs"
+        Specify the return type of error term. It can be calculated as a
+        percentage difference
+        or as an
+        absolute difference
+        between the numerical and the analytical solution.
+
+    Returns
+    -------
+    ErrorTerm: 1D or 2D array
+
+        Error term.
+    """
+    shapeU = uNum.shape  # Obtain Dimension
+    ErrorTerm = uNum.copy()  # Initialize ErrorTerm
+
+    if len(shapeU) == 1:
+        ErrorTerm[:] = abs(uAna[:] - uNum[:])
+        if ReturnType == "%":
+            ErrorTerm[:] = (ErrorTerm[:]/uAna[:])*100.0
+
+    elif len(shapeU) == 2:
+        ErrorTerm[:, :] = abs(uAna[:, :] - uNum[:, :])
+        if ReturnType == "%":
+            ErrorTerm[:, :] = (ErrorTerm[:, :]/uAna[:, :])*100.0
+
+    return ErrorTerm
+
+
 def FourthOrderDamping(U, DampCoeff):
     """Return fourth-order damping term.
 
@@ -401,35 +496,35 @@ def WriteSolutionIn1DFormat(CfgClsObj, U, Out1DFName=None):
     OutFile.close()
 
 
-def Plot1DResults(**kwargs):
+def Plot1DResults(dataFiles, **kwargs):
     """Plot results along 1D axis.
+
+    This plotting function utilizes the features provided by the
+    matplotlib plotting library. It accepts keyword arguments as inputs.
+    If the keyword arguments is not provided, the default values will be
+    assigned.
 
     Call Signature:
 
-        WriteSolutionIn1DFormat(CfgClsObj, U)
+        Plot1DResults(dataFiles, **kwargs)
 
     Parameters
     ----------
-    This plotting function utilizes the features provided by the
-    matplotlib plotting library by accepting keyword arguments as inputs.
-    If the keyword arguments is not provided, the default values will be
-    assigned.
-    Following are the list of allowed keyword arguments.
-            **kwargs = [dataFiles,
-                        uAxis,
-                        Legend,
-                        Markers,
-                        useFileCol,
-                        Title,
-                        xLabel,
-                        yLablel
-                        ]
-
     dataFiles: str list
 
         Provide path of the saved files as a list. Function will read and
-        plot the stored data in these files. This is a required parameter,
-        otherwise it will result in InputError exception.
+        plot the stored data in these files. Atleast one file input is
+        required.
+
+    **kwargs = [
+        uAxis,
+        Legend,
+        Markers,
+        useFileCol,
+        Title,
+        xLabel,
+        yLabel
+        ]
 
     uAxis: str, default="X"
 
@@ -479,10 +574,10 @@ def Plot1DResults(**kwargs):
 
         Y-axis label in the plot.
     """
+    from os import path
     from .backend._plots import _Plot1D
     from .backend.exceptions import InputFileError
-    from os import path
-    dataFiles = kwargs.get("dataFiles", None)
+
     uAxis = kwargs.get("uAxis", "X")
     legend = kwargs.get("Legend", None)
     markers = kwargs.get("Markers", "default")
@@ -491,8 +586,6 @@ def Plot1DResults(**kwargs):
     xlbl = kwargs.get("xLabel", None)
     ylbl = kwargs.get("yLabel", None)
 
-    if dataFiles is None:
-        raise InputFileError("NoInput")
     for file in dataFiles:
         if(path.exists(file)) is False:
             raise InputFileError("FileNotfound", file)
@@ -511,3 +604,134 @@ def Plot1DResults(**kwargs):
             markers = markers
     _Plot1D(dataFiles, uAxis, legend, markers, useFileCol, title,
             xlbl, ylbl)
+
+
+def Plot2DResults(dataFiles, **kwargs):
+    """Plot 2D results within the simulation domain.
+
+    This plotting function utilizes the features provided by the
+    matplotlib plotting library. It uses keyword arguments as inputs.
+    If the keyword arguments is not provided, the default values will be
+    assigned.
+
+    Call Signature:
+
+        Plot2DResults(dataFiles, iMax, jMax, **kwargs)
+
+    Parameters
+    ----------
+    dataFiles: str list
+
+        Provide path of the saved files as a list. Function will read and
+        plot the stored data in these files. Atleast one file input is
+        required.
+
+    iMax: int
+
+        Number of grid points along X-axis.
+
+    jMax: int
+
+        Number of grid points along Y-axis.
+
+    **kwargs = [
+        Title,
+        xLabel,
+        yLabel,
+        cbarLabel,
+        nPlots,
+        nRow,
+        nCol
+        cMap,
+        Shading,
+        PlotType
+        ]
+
+    uAxis: str, default="X"
+
+        Provide the axis of U on the plot. Allowed values are "X" or "Y"
+        string.
+        If
+            uAxis = "X"
+            -----------
+        the stored numerical solution of the dependent variable will be
+        plotted on the X-axis as a function of values on Y-axis.
+        Vice-versa, if
+            uAxis = "Y"
+            -----------
+        the numerical solution will be plotted on the Y-axis as a function
+        of values on X-axis.
+
+    Legend: str list, Default=None
+
+        String list to display legends in the plot. Optional.
+        Plot legends are a useful tool to make the plots informative.
+        If Legend is provided, the length of the Legend list must be
+        equal to or greater than the length of dataFiles.
+
+    Markers: str list, Default=None
+
+        List of markers. Optional. The allowed markers are given in
+        matplotlib documentation. The Plot1DResults make use of the
+        matplotlib marker, markevery, markersize features.
+        If Markers is provided, the length of the Markers list must be
+        equal to or greater than the length of dataFiles.
+
+    useFileCol: int, Default=1
+
+        Column number of the data stored in the file to plot.
+        If not provided, the column number 1 will be plotted versus
+        column number 0.
+
+    Title: str, Default=None
+
+        Title text of the plot.
+
+    xLabel: str, Default=None
+
+        X-axis label in the plot.
+
+    yLabel: str, Default=None
+
+        Y-axis label in the plot.
+    """
+    from os import path
+    import warnings
+    from .backend._plots import _Plot2D, _MultiPlot2D
+    from .backend.exceptions import InputFileError
+
+    countFiles = len(dataFiles)
+
+    pTitle = kwargs.get("Title", None)
+    xLabel = kwargs.get("xLabel", None)
+    yLabel = kwargs.get("yLabel", None)
+    cbarLbl = kwargs.get("cbarLabel", None)
+    nPlots = kwargs.get("nPlots", 1)
+    cMap = kwargs.get("cMap", "viridis")
+    Shading = kwargs.get("Shading", "gouraud")
+    nRow = kwargs.get("nRow", 1)
+    nCol = kwargs.get("nCol", 1)
+    PlotType = kwargs.get("PlotType", "pcolormesh")
+    cLevel = kwargs.get("cLevel", None)
+    Alpha = kwargs.get("Alpha", 0.5)
+
+    if (countFiles) > 1 and nPlots == 1:
+        warnings.warn("More than one files input found for 1 plot.\
+ Plotting data from the first file.")
+    else:
+        for file in dataFiles:
+            if(path.exists(file)) is False:
+                raise InputFileError("FileNotfound", dataFiles)
+
+    if nPlots == 1:
+        _Plot2D(dataFiles[0], pTitle, xLabel, yLabel, cbarLbl, PlotType,
+                cMap, Shading, cLevel, Alpha)
+    elif nPlots > 1:
+        # Set title arrays for multiple plots
+        if isinstance(pTitle, str) is True:
+            title = [pTitle for i in range(nPlots)]
+        elif len(pTitle) == nPlots:
+            title = pTitle
+        _MultiPlot2D(nPlots, nRow, nCol, dataFiles, title,
+                     xLabel, yLabel, cbarLbl, PlotType, cMap,
+                     Shading, cLevel, Alpha)

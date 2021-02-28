@@ -1,4 +1,4 @@
-"""Not a public module in 1.0.0a4."""
+"""Not a public module."""
 #   ***********************************************************************
 #
 #   FILE         plotmetrics.py
@@ -37,25 +37,27 @@
 #   NAnPack Learner's Edition.
 #
 #   ***********************************************************************
+import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits.mplot3d import axes3d
 
 
-def PlotMetrics2D(X, Y, XiX, XiY, EtaX, EtaY):
+def _plot_metrics_2d(XiX, XiY, EtaX, EtaY, x, y):
     """Show the plot of the metrics of the transformation."""
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from mpl_toolkits.mplot3d import axes3d
-
-    shape = XiX.shape
-    im, jm = shape
+    im, jm = XiX.shape
 
     # Assign fonts in the figure
     plt.rc('font', family='serif', size=9)
 
     fig = plt.figure(dpi=150)
 
+    if x is None and y is None:
+        x = np.linspace(1, im, im)
+        y = np.linspace(1, jm, jm)
+    else:
+        x = np.reshape(x, (im, jm))
+        y = np.reshape(y, (im, jm))
     # Reshape data based on IM and JM
-    x = np.reshape(X, (im, jm))
-    y = np.reshape(Y, (im, jm))
     z1 = np.reshape(XiX, (im, jm))
     z2 = np.reshape(XiY, (im, jm))
     z3 = np.reshape(EtaX, (im, jm))
@@ -79,8 +81,8 @@ def PlotMetrics2D(X, Y, XiX, XiY, EtaX, EtaY):
         else:
             ax.plot_wireframe(x, y, z4)
         # define plot properties
-        plt.xlabel('\n\nX (m)', size=8)
-        plt.ylabel('\n\nY (m)', size=8)
+        plt.xlabel('\n\nX', size=8)
+        plt.ylabel('\n\nY', size=8)
         plt.title(f'{ttl[i-1]} Metrics', size=10)
         ax.set_zlim(-20.0, 20.0)
         plt.xticks(size=8, rotation=30)
@@ -89,4 +91,33 @@ def PlotMetrics2D(X, Y, XiX, XiY, EtaX, EtaY):
         plt.tight_layout()
     plt.subplots_adjust(left=0.1, right=0.9, bottom=0.05, hspace=0.2,
                         wspace=0.01)
+    plt.show()
+
+
+def _plot_grid(x, y):
+    """Plot X and Y on a figure."""
+    im, jm = x.shape
+    # Assign fonts in the figure
+    plt.rc('font', family='serif', size=9)
+
+    # Reshape data using IM and JM
+    X = np.reshape(x, (im, jm))
+    Y = np.reshape(y, (im, jm))
+
+    # Generate plot for the data
+    print('\nGenerating data plot.')
+    for i in range(im):
+        plt.plot(X[i, :], Y[i, :], 'k')
+
+    for i in range(jm):
+        plt.plot(X[:, i], Y[:, i], 'k')
+
+    # define plot properties
+    plt.xlabel('X (m)', size=10)
+    plt.ylabel('Y (m)', size=10)
+    plt.title('2D Mesh')
+
+    # Set display properties of the plot and save
+    plt.tight_layout()
+    plt.gca().set_aspect('equal', adjustable='box')
     plt.show()

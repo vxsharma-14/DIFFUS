@@ -39,7 +39,7 @@
 #   ***********************************************************************
 
 
-class nondimensionalize:
+class NonDimensionalize:
     """A class to non-dimensionalize various numerical parameters.
 
     This is not complete or tested for accuracy.
@@ -48,17 +48,12 @@ class nondimensionalize:
     def __init__(self):
         """Class construcotr."""
 
-    def ndXgrid(self, X, L):
+    def ndGrid(self, X, L):
         """Non-dimensionalize x point locations along X axis."""
         self.xstar[:] = X[:]/L
         return self.xstar
 
-    def ndYgrid(self, Y, L):
-        """Non-dimensionalize y point locations along Y axis."""
-        self.ystar[:] = Y[:]/L
-        return self.ystar
-
-    def ndvelU(self, U, L, nu):
+    def ndVelU(self, U, L, nu):
         """Non-dimensionalize velocity U."""
         shapeU = U.shape
         if len(shapeU) == 1:
@@ -70,14 +65,14 @@ class nondimensionalize:
                           for i in range(im)]
         return self.ustar
 
-    def ndtime(self, t, L, nu):
+    def ndTime(self, t, L, nu):
         """Non-dimensionalize time t."""
         L2 = L*L
         self.tstar = nu*t/L2
         return self.tstar
 
 
-class dimensionalize:
+class Dimensionalize:
     """A class to dimensionalize various numerical parameters.
 
     This is not complete or tested for accuracy.
@@ -86,29 +81,29 @@ class dimensionalize:
     def __init__(self):
         """Class constructor."""
 
-    def dimXgrid(self, xstar, L):
+    def dimGrid(self, xstar, L):
         """Dimensionalize x point locations along X axis."""
         self.x[:] = xstar[:]*L
         return self.x
 
-    def dimYgrid(self, ystar, L):
-        """Dimensionalize y point locations along Y axis."""
-        self.y[:] = ystar[:]*L
-        return self.ystar
-
-    def dimvelU(self, ustar, L, nu):
+    def dimVelU(self, ustar, L, nu):
         """Dimensionalize velocity U."""
+        import numpy as np
         shapeU = ustar.shape
         if len(shapeU) == 1:
-            im = shapeU
-            self.u = [ustar[i]*nu/L for i in range(im)]
+            iM, = shapeU
+            self.u = np.zeros((iM), dtype="float")
+            for i in range(0, iM):
+                self.u[i] = ustar[i]*nu/L
         elif len(shapeU) == 2:
-            im, jm = shapeU
-            self.u = [[ustar[i][j]*nu/L for j in range(jm)]
-                      for i in range(im)]
+            iM, jM = shapeU
+            self.u = np.zeros((iM), dtype="float")
+            for i in range(0, iM):
+                for j in range(0, jM):
+                    self.u[i][j] = ustar[i][j]*nu/L
         return self.u
 
-    def dimtime(self, tstar, L, nu):
+    def dimTime(self, tstar, L, nu):
         """Non-dimensionalize time t."""
         L2 = L*L
         self.t = tstar*L2/nu

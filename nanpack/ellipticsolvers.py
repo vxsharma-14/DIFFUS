@@ -12,6 +12,9 @@ conduction equation, which is expressed as:
 
     where,
                 u: measurable quanity
+
+    When f(x,y) = 0, the Poisson's equation reduces to Laplace's equations.
+    The nummerical formulations in this modules solves the Laplace's eqn.
 """
 #   ***********************************************************************
 #
@@ -60,35 +63,29 @@ def PointGaussSeidel(Uo, Beta):
     """Return the numerical solution of dependent variable in the model eq.
 
     This routine uses the Point-Gauss Seidel method
-    to obtain the solution of the Poissons equation.
+    to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         PointGaussSeidel(Uo, Beta)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
 
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "Point Gauss-Seidel")
     # Proceed to numerical solution
     U = Uo.copy()  # Initialize U
     iMax, jMax = shapeU
@@ -101,7 +98,7 @@ def PointGaussSeidel(Uo, Beta):
     # Numpy slicing operation below will result in Jacobi iteration method.
     # U[1:-1,1:-1] = A*(U[2:,1:-1] + U[0:-2,1:-1] +\
     #                   B2*(U[1:-1,2:] + U[1:-1,0:-2]))
-    # Another point to note that in the POISSON'S SOLVERS formulation, the
+    # Another point to note that in the Laplace's SOLVERS formulation, the
     # dependent variable U is used on RHS of discretized eqn instead of Uo
     # as in other MODELS, which is due to the formulation requirement to
     # use
@@ -122,35 +119,29 @@ def LineGaussSeidel_i(Uo, Beta):
 
     This routine uses the Line-Gauss Seidel method along constant i
     direction (parallel to y-axis)
-    to obtain the solution of the Poisson's equation.
+    to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         LineGaussSeidel_i(Uo, Beta)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
 
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "Line Gauss-Seidel")
     # Proceed to numerical solution
     U = Uo.copy()  # Initialize U
     iMax, jMax = shapeU
@@ -160,7 +151,7 @@ def LineGaussSeidel_i(Uo, Beta):
     C = [B2 for j in range(jMax)]
     D = [0 for j in range(jMax)]
     UU = [0 for j in range(jMax)]
-    # NOTE that in the POISSON'S SOLVERS formulation, the dependent
+    # NOTE that in the Laplace's SOLVERS formulation, the dependent
     # variable U
     # is used on RHS of discretized eqn instead of Uo as in other MODELS,
     # which is due to the formulation requirement to use values of
@@ -184,35 +175,29 @@ def LineGaussSeidel_j(Uo, Beta):
 
     This routine uses the Line-Gauss Seidel method along constant j
     direction (parallel to x-axis)
-    to obtain the solution of the Poisson's equation.
+    to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         LineGaussSeidel_j(Uo, Beta)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
 
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "Line Gauss-Seidel")
     # Proceed to numerical solution
     U = Uo.copy()  # Initialize U
     iMax, jMax = shapeU
@@ -222,7 +207,7 @@ def LineGaussSeidel_j(Uo, Beta):
     C = [B2 for i in range(iMax)]
     D = [0 for i in range(iMax)]
     UU = [0 for i in range(iMax)]
-    # NOTE that in the POISSON'S SOLVERS formulation, the dependent
+    # NOTE that in the Laplace's SOLVERS formulation, the dependent
     # variable U
     # is used on RHS of discretized eqn instead of Uo as in other MODELS,
     # which is due to the formulation requirement to use values of
@@ -245,49 +230,38 @@ def PSOR(Uo, Beta, RelaxParam=1.78):
     """Return the numerical solution of dependent variable in the model eq.
 
     This routine uses the Point Successive Over-Relaxation (PSOR) method
-    to obtain the solution of the Poisson's equation.
+    to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         PSOR(Uo, Beta, RelaxParam)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
-
     RelaxParam : float, Default = 1.78
-
         Relaxation Parameter is used for faster convergence of PSOR method.
         Specify RelaxParam values between 0 and 2.0 to obtain convergence.
-
         If 0 < RelaxParam < 1: it is called UNDER-RELAXATION.
         If RelaxParam = 1: Point Gauss-Seidel method is recovered.
         An optimum value is determined by performing numerical
         experimentations.
-
         RelaxParam = 1.78 was found to be an optimum value for PSOR method
         for the problem with a rectangular domain having uniform grid step
         with the Dirichlet BC imposed (see Hoffmann Vol. 1, pg 164, 170).
-
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "Point S Over-Relaxation.")
     # Proceed to numerical solution
     U = Uo.copy()  # Initialize U
     iMax, jMax = shapeU
@@ -300,7 +274,7 @@ def PSOR(Uo, Beta, RelaxParam=1.78):
     # U[1:-1,1:-1] = (1.0 - RelaxParam)*Uo[1:-1,1:-1] +\
     #                 RelaxParam*A*(Uo[2:,1:-1] + Uo[0:-2,1:-1] +\
     #                               B2*(Uo[1:-1,2:] + Uo[1:-1,0:-2]))
-    # Another point to note that in the POISSON'S SOLVERS formulation, the
+    # Another point to note that in the Laplace's SOLVERS formulation, the
     # dependent variable U is used on RHS of discretized eqn instead of Uo
     # as in other MODELS, which is due to the formulation requirement to
     # use the
@@ -323,35 +297,26 @@ def LSOR_i(Uo, Beta, RelaxParam=1.265):
 
     This routine uses the Line Successive-Over Relaxation (LSOR) method
     along constant i direction (parallel to y-axis).
-    to obtain the solution of the Poisson's equation.
+    to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         LSOR_i(Uo, Beta, RelaxParam)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
-
     RelaxParam : float, Default = 1.265
-
         Relaxation Parameter is used for faster convergence of LSOR method.
         Specify RelaxParam values between 0 and 2.0 to obtain convergence.
-
         If 0 < RelaxParam < 1: it is called UNDER-RELAXATION.
         If RelaxParam = 1: Line Gauss-Seidel method is recovered.
         An optimum value is determined by performing numerical
         experimentations.
-
         RelaxParam = 1.265 was found to be an optimum value for LSOR_i
         method for the problem with a rectangular domain having uniform
         grid step with the Dirichlet BC imposed
@@ -360,14 +325,13 @@ def LSOR_i(Uo, Beta, RelaxParam=1.265):
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
 
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "Line S Over-Relaxation")
     # Proceed to numerical solution
     U = Uo.copy()  # Initialize U
     iMax, jMax = shapeU
@@ -377,7 +341,7 @@ def LSOR_i(Uo, Beta, RelaxParam=1.265):
     C = [RelaxParam*B2 for j in range(jMax)]
     D = [0 for j in range(jMax)]
     UU = [0 for j in range(jMax)]
-    # NOTE that in the POISSON'S SOLVERS formulation, the dependent
+    # NOTE that in the Laplace's SOLVERS formulation, the dependent
     # variable U
     # is used on RHS of discretized eqn instead of Uo as in other MODELS,
     # which is due to the formulation requirement to use values of
@@ -405,35 +369,26 @@ def LSOR_j(Uo, Beta, RelaxParam=1.265):
 
     This routine uses the Line Successive-Over Relaxation (LSOR) method
     along constant j direction (parallel to x-axis).
-    to obtain the solution of the Poisson's equation.
+    to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         LSOR_j(Uo, Beta, RelaxParam)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
-
     RelaxParam : float, Default = 1.265
-
         Relaxation Parameter is used for faster convergence of LSOR method.
         Specify RelaxParam values between 0 and 2.0 to obtain convergence.
-
         If 0 < RelaxParam < 1: it is called UNDER-RELAXATION.
         If RelaxParam = 1: Line Gauss-Seidel method is recovered.
         An optimum value is determined by performing numerical
         experimentations.
-
         RelaxParam = 1.265 was found to be an optimum value for LSOR_i
         method for the problem with a rectangular domain having uniform
         grid step with the Dirichlet BC imposed
@@ -442,13 +397,12 @@ def LSOR_j(Uo, Beta, RelaxParam=1.265):
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "Line S Over-Relaxation")
     # Proceed to numerical solution
     U = Uo.copy()  # Initialize U
     iMax, jMax = shapeU
@@ -458,7 +412,7 @@ def LSOR_j(Uo, Beta, RelaxParam=1.265):
     C = [RelaxParam for i in range(iMax)]
     D = [0 for i in range(iMax)]
     UU = [0 for i in range(iMax)]
-    # NOTE that in the POISSON'S SOLVERS formulation, the dependent
+    # NOTE that in the Laplace's SOLVERS formulation, the dependent
     # variable U
     # is used on RHS of discretized eqn instead of Uo as in other MODELS,
     # which is due to the formulation requirement to use values of
@@ -485,41 +439,35 @@ def ADI(Uo, Beta):
     """Return the numerical solution of dependent variable in the model eq.
 
     This routine uses the Alternating Direction Implicit (ADI) method
-    to obtain the solution of the Poisson's equation.
+    to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         ADI(Uo, Beta)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
 
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "Alternating Dir. Implict")
     # Proceed to numerical solution
     Uhalf = Uo.copy()  # Uhalf is U at time level (n + 1/2)
     U = Uo.copy()  # Initialize U
     iMax, jMax = shapeU
     B2 = Beta*Beta
-    # NOTE that in the POISSON'S SOLVERS formulation, the dependent
+    # NOTE that in the Laplace's SOLVERS formulation, the dependent
     # variable U
     # is used on RHS of discretized eqn instead of Uo as in other MODELS,
     # which is due to the formulation requirement to use values of
@@ -575,52 +523,41 @@ def ADISOR(Uo, Beta, RelaxParam=1.27):
     """Return the numerical solution of dependent variable in the model eq.
 
     This routine uses the Alternating Direction Implicit Successive Over-
-    Relaxation method to obtain the solution of the Poisson's equation.
+    Relaxation method to obtain the solution of the Laplace's equation.
 
     Call signature:
-
         ADISOR(Uo, Beta, RelaxParam)
 
     Parameters
     ----------
     Uo : 2D array
-
         The dependent variable obtained from the previous iteration
         level, n.
-
     Beta : float
-
-        Coefficient in the Poissons finite difference approximation.
-
+        Coefficient in the Laplace's finite difference approximation.
         Beta = dX/dY
-
     RelaxParam : float, Default = 1.27
-
         Relaxation Parameter is used for faster convergence of ADISOR
         method.
         Specify RelaxParam values between 0 and 2.0 to obtain convergence.
-
         If 0 < RelaxParam < 1: it is called UNDER-RELAXATION.
         If RelaxParam = 1: Alternating Direction Implicit method is
         recovered.
         An optimum value is determined by performing numerical
         experimentations.
-
         RelaxParam = 1.27 was found to be an optimum value for ADISOR
         method for the problem with a rectangular domain having uniform
         grid step with the Dirichlet BC imposed
         (see Hoffmann Vol. 1, pg 172, 183).
-
     Returns
     -------
     U : 2D array
-
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 1:
-        raise DimensionError("1D", "POISSONS")
+        raise DimensionError("1D", "Laplace's", "ADI S. Over-Relaxation")
     # Proceed to numerical solution
     Uhalf = Uo.copy()  # Uhalf is U at time level (n + 1/2)
     U = Uo.copy()  # Initialize U

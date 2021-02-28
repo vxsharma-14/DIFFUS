@@ -78,6 +78,7 @@ or,
 #
 #   ***********************************************************************
 from .tridiagonal import TridiagonalSolver
+from .backend.exceptions import DimensionError
 
 
 def ExplicitFirstUpwind(cfg, Uo, Courant):
@@ -104,7 +105,7 @@ def ExplicitFirstUpwind(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -116,8 +117,7 @@ def ExplicitFirstUpwind(cfg, Uo, Courant):
     import numpy as np
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "First Upwind")
 
     U = Uo.copy()  # Initialize U
     if cfg.Model.upper() == "FO_WAVE":
@@ -134,7 +134,6 @@ def ExplicitFirstUpwind(cfg, Uo, Courant):
         U[1:-1] = Uo[1:-1] - Courant*(E[1:-1]-E[0:-2])
 
     return U
-#   ***********************************************************************
 
 
 def Lax(cfg, Uo, Courant):
@@ -161,7 +160,7 @@ def Lax(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -172,8 +171,7 @@ def Lax(cfg, Uo, Courant):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Lax")
 
     U = Uo.copy()  # Initialize U
     if cfg.Model.upper() == "FO_WAVE":
@@ -188,7 +186,6 @@ def Lax(cfg, Uo, Courant):
             )
 
     return U
-#   ***********************************************************************
 
 
 def MidpointLeapfrog(cfg, Uo, Courant):
@@ -215,7 +212,7 @@ def MidpointLeapfrog(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -226,8 +223,7 @@ def MidpointLeapfrog(cfg, Uo, Courant):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Midpoint Leapfrog")
 
     if cfg.Model.upper() == "FO_WAVE":
         raise Exception("This formulation is not available for WAVE\
@@ -238,7 +234,6 @@ def MidpointLeapfrog(cfg, Uo, Courant):
  equation in this version.")
 
     # return U
-#   ***********************************************************************
 
 
 def LaxWendroff(cfg, Uo, Courant):
@@ -265,7 +260,7 @@ def LaxWendroff(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -276,8 +271,7 @@ def LaxWendroff(cfg, Uo, Courant):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Lax-Wendroff")
 
     U = Uo.copy()  # Initialize U
     if cfg.Model.upper() == "FO_WAVE":
@@ -297,7 +291,6 @@ def LaxWendroff(cfg, Uo, Courant):
             )
 
     return U
-#   ***********************************************************************
 
 
 def LaxWendroffMultiStep(cfg, Uo, Courant):
@@ -324,7 +317,7 @@ def LaxWendroffMultiStep(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -335,8 +328,7 @@ def LaxWendroffMultiStep(cfg, Uo, Courant):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "multi-step L-Wen.")
 
     if cfg.Model.upper() == "FO_WAVE":
         U = Uo.copy()  # Initialize U
@@ -351,7 +343,6 @@ def LaxWendroffMultiStep(cfg, Uo, Courant):
  equation in this version.")
 
     return U
-#   ***********************************************************************
 
 
 def MacCormack(cfg, Uo, Courant, diffX=None):
@@ -378,7 +369,7 @@ def MacCormack(cfg, Uo, Courant, diffX=None):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -389,8 +380,7 @@ def MacCormack(cfg, Uo, Courant, diffX=None):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "MacCormack")
 
     iMax, = shapeU
     U = Uo.copy()  # Initialize U
@@ -410,19 +400,7 @@ def MacCormack(cfg, Uo, Courant, diffX=None):
             U[i] = 0.5*((Uo[i]+Utemp[i])
                         - Courant*(Etemp[i]-Etemp[i-1]))  # Corrector step
 
-    elif cfg.Model.upper() == "VISC_BURGERS":
-        E = Uo*Uo/2
-        c = A*Courant
-        for i in range(1, iMax-1):
-            dUo[i] = (- Courant*(E[i+1] - E[i])
-                      + diffX*(Uo[i+1] - 2.0*Uo[i] + Uo[i-1]))
-            Utemp[i] = Uo[i] + dUo[i]  # Predictor step
-            dUtemp[i] = (- Courant*(Etemp[i]-Etemp[i-1])
-                         + diffX*(Utemp[i+1] - 2.0*Utemp[i] + Utemp[i-1]))
-            U[i] = 0.5 * (Uo[i]+Utemp[i]+dUtemp[i])  # Corrector step
-
     return U
-#   ***********************************************************************
 
 
 def FourthOrderRungeKutta(cfg, Uo, Courant):
@@ -449,7 +427,7 @@ def FourthOrderRungeKutta(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -460,8 +438,7 @@ def FourthOrderRungeKutta(cfg, Uo, Courant):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "4th order RK")
 
     U = Uo.copy()  # Initialize U
     if cfg.Model.upper() == "FO_WAVE":
@@ -509,7 +486,6 @@ def FourthOrderRungeKutta(cfg, Uo, Courant):
             )
 
     return U
-#   ***********************************************************************
 
 
 def ModifiedRungeKutta(cfg, Uo, Courant, diffX):
@@ -536,7 +512,7 @@ def ModifiedRungeKutta(cfg, Uo, Courant, diffX):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -547,8 +523,7 @@ def ModifiedRungeKutta(cfg, Uo, Courant, diffX):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Modified RK")
 
     U = Uo.copy()  # Initialize U
     if cfg.Model.upper() == "FO_WAVE":
@@ -565,7 +540,7 @@ def ModifiedRungeKutta(cfg, Uo, Courant, diffX):
         U[1:-1] = Uo[1:-1] - Courant*(U[2:]-U[0:-2])/2.0
         # -- update BC here (required when Neumann BC is used)
 
-    elif cfg.Model.upper() in ["INV_BURGERS", "VISC_BURGERS"]:
+    elif cfg.Model.upper() == "INV_BURGERS":
         # 1st stage
         E = Uo*Uo/2
         U[1:-1] = Uo[1:-1] - Courant*(E[2:]-E[0:-2])/8.0
@@ -583,13 +558,7 @@ def ModifiedRungeKutta(cfg, Uo, Courant, diffX):
         U[1:-1] = Uo[1:-1] - Courant*(E[2:]-E[0:-2])/2.0
         # -- update BC here (required when Neumann BC is used)
 
-        if cfg.Model.upper() == "VISC_BURGERS":
-            # Add the viscous terms in the viscous Burgers equation
-            # after the final stage, (pg 291. CFD Vol 1 Hoffmann].
-            U[1:-1] = U[1:-1] + diffX*(U[2:] - 2.0*U[1:-1] + U[0:-2])
-
     return U
-#   ***********************************************************************
 
 
 def EulersBTCS(cfg, Uo, Courant, diffX=None):
@@ -617,7 +586,7 @@ def EulersBTCS(cfg, Uo, Courant, diffX=None):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -628,8 +597,7 @@ def EulersBTCS(cfg, Uo, Courant, diffX=None):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Euler BTCS")
 
     iMax, = shapeU
     U = Uo.copy()  # Initialize U
@@ -646,20 +614,7 @@ def EulersBTCS(cfg, Uo, Courant, diffX=None):
         raise Exception("This formulation is not available for BURGERS\
  equation in this version.")
 
-    elif cfg.Model.upper() == "VISC_BURGERS":
-        E = Uo*Uo/2
-        A = Uo.copy()
-        cc = 0.5*Courant
-        A[1:-1] = (E[2:] - E[1:-1])/(Uo[2:] - Uo[1:-1])
-        AA = [(-diffX - A[i]*cc) for i in range(iMax)]
-        BB = [(1.0 + 2.0*diffX) for i in range(iMax)]
-        CC = [(-diffX + A[i]*cc) for i in range(iMax)]
-        DD = [Uo[i] for i in range(iMax)]
-        UU = Uo.copy()
-        U = TridiagonalSolver(iMax, AA, BB, CC, DD, UU)
-
     return U
-#   ***********************************************************************
 
 
 def CrankNicolson(cfg, Uo, Courant):
@@ -686,7 +641,7 @@ def CrankNicolson(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -697,8 +652,7 @@ def CrankNicolson(cfg, Uo, Courant):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Crank-Nicolson")
 
     if cfg.Model.upper() == "FO_WAVE":
         U = Uo.copy()  # Initialize U
@@ -718,7 +672,6 @@ def CrankNicolson(cfg, Uo, Courant):
  equation in this version.")
 
     return U
-#   ***********************************************************************
 
 
 def BeamAndWarming(cfg, Uo, Courant):
@@ -745,7 +698,7 @@ def BeamAndWarming(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -756,8 +709,7 @@ def BeamAndWarming(cfg, Uo, Courant):
     """
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Beam and Warming")
 
     if cfg.Model.upper() == "FO_WAVE":
         raise Exception("This formulation is not available for WAVE\
@@ -784,7 +736,6 @@ def BeamAndWarming(cfg, Uo, Courant):
         U = TridiagonalSolver(iMax, A, B, C, D, UU)
 
     return U
-#   ***********************************************************************
 
 
 def FirstOrderTVD(cfg, Uo, Courant):
@@ -811,7 +762,7 @@ def FirstOrderTVD(cfg, Uo, Courant):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Returns
     -------
@@ -824,8 +775,7 @@ def FirstOrderTVD(cfg, Uo, Courant):
 
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "First-order TVD")
 
     if cfg.Model.upper() == "FO_WAVE":
         raise Exception("This formulation is not available for WAVE\
@@ -857,7 +807,6 @@ def FirstOrderTVD(cfg, Uo, Courant):
             U[i] = Utemp + 0.5*Courant*(phiPlus-phiMinus)
 
     return U
-#   ***********************************************************************
 
 
 def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
@@ -885,7 +834,20 @@ def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
 
     Courant : float
 
-        Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
+
+    LimiterFunc: str
+
+        Flux limiter function.
+
+    Limiter:
+
+        Limiter type.
+
+    Eps: float, Default=0.1
+
+        A positive constant in the entropy correction term, si in Eq. 6-127
+        in CFD Vol. 1 by Hoffmann. Its value must be between 0 and 0.125.
 
     Returns
     -------
@@ -894,13 +856,13 @@ def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
         The dependent variable calculated at time level (n+1) within the
         entire domain.
     """
-    import nanpack.tvdfunctions as tvd
+    from .tvdfunctions import CalculateTVD
     import backend.fetchoptions as fo
+    from .backend.exceptions import TVDLimiterFunctionInputError
 
     shapeU = Uo.shape  # Obtain Dimension
     if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
+        raise DimensionError("2D", "inviscid Bergers", "Second-order TVD")
 
     if cfg.Model.upper() == "FO_WAVE":
         raise Exception("This formulation is not available for WAVE\
@@ -914,30 +876,20 @@ def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
     limfunc_options = fetch.TVDLimiterFunctionOptions()
 
     if LimiterFunc not in limfunc_options:
-        raise Exception(f"Invalid flux limiter function selection in the\
- call to function\nSecondOrderTVD().\nValid options for LimiterFunc are:\
- {limfunc_options}.")
+        raise TVDLimiterFunctionInputError(LimiterFunc)
 
     for i in range(2, iMax-2):
-        phiPlus, phiMinus = tvd.CalculateTVD(i, Uo, E, Eps, Courant,
-                                             Limiter, LimiterFunc)
+        phiPlus, phiMinus = CalculateTVD(i, Uo, E, Eps, Courant,
+                                         Limiter, LimiterFunc)
 
         # Equation 6-124 and 6-125 in Hoffmann Vol. 1
         hPlus = 0.5 * (E[i+1]+E[i]+phiPlus)
         hMinus = 0.5 * (E[i]+E[i-1]+phiMinus)
 
-        if cfg.Model.upper() == "VISC_BURGERS":
-            # calculate diffusion terms in the viscous Bergers equation
-            # Equation 7-58
-            diffusion = diffX*(Uo[i+1] - 2.0*Uo[i] + Uo[i-1])
-        else:
-            diffusion = 0.0
-
         # Equation 6-123
-        U[i] = Uo[i] - Courant*(hPlus-hMinus) + diffusion
+        U[i] = Uo[i] - Courant*(hPlus-hMinus)
 
     return U
-#   ***********************************************************************
 
 
 # def FluxCorrectedTransport(cfg, Uo, Courant, Damp1, Damp2):
@@ -954,7 +906,6 @@ def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
 
     Parameters
     ----------
-
     cfg :
 
            Class object of RunConfig class which was created at the
@@ -966,7 +917,7 @@ def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
 
     Courant : float
 
-              Courant number (entered as user input in file).
+        Courant number that appears in the convection component of the PDE.
 
     Damp1 : float
 
@@ -979,7 +930,6 @@ def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
 
     Returns
     -------
-
     U : 1D array
 
         The dependent variable calculated at time level (n+1) within the
@@ -1013,285 +963,3 @@ def SecondOrderTVD(cfg, Uo, Courant, LimiterFunc, Limiter, Eps=0.1):
  equation in this version.")
 
     return U'''
-#   ***********************************************************************
-
-
-def FTCS(cfg, Uo, Courant, diffX):
-    """Return the numerical solution of dependent variable in the model eq.
-
-    This routine uses the explicit Forward Time Central Spacing (FTCS)
-    method
-    to obtain the solution of the
-    1-D non-linear viscous Burgers equation.
-
-    Call signature:
-
-        FTCS(cfg, Uo, Courant, diffX)
-
-    Parameters
-    ----------
-    cfg :
-
-        Class object of RunConfig class which was created at the
-        beginning of the simulation.
-
-    Uo : 1D array
-
-        The dependent variable from time level (n) within the domain.
-
-    Courant : float
-
-        Courant number (entered as user input in file).
-
-    Returns
-    -------
-    U : 1D array
-
-        The dependent variable calculated at time level (n+1) within the
-        entire domain.
-    """
-    shapeU = Uo.shape  # Obtain Dimension
-    if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
-
-    if cfg.Model.upper() == "FO_WAVE":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    elif cfg.Model.upper() == "INV_BURGERS":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    elif cfg.Model.upper() == "VISC_BURGERS":
-        U = Uo.copy()  # Initialize U
-        A = Uo.copy()  # Initialize A
-        E = Uo*Uo/2
-        iM, = shapeU
-        for i in range(1, iM-1):
-            try:
-                A[i] = (E[i+1]-E[i]) / (Uo[i+1]-Uo[i])
-            except:
-                print(Uo[2:]-Uo[1:-1])
-                raise Exception
-        A[1:-1] = (E[2:]-E[1:-1]) / (Uo[2:]-Uo[1:-1])
-        U[1:-1] = (
-            Uo[1:-1]
-            - 0.5*0.5*Courant*(A[2:]+A[0:-2])*(Uo[2:]-Uo[0:-2])
-            + diffX*(Uo[2:] - 2.0*Uo[1:-1] + Uo[0:-2])
-            )
-
-    return U
-#   ***********************************************************************
-
-
-def FTBCS(cfg, Uo, Courant, diffX):
-    """Return the numerical solution of dependent variable in the model eq.
-
-    This routine uses the explicit FTCS method with backward approximation
-    of the convective term
-    to obtain the solution of the
-    1D non-linear viscous Burgers equation.
-
-    Call signature:
-
-        FTBCS(cfg, Uo, Courant, diffX)
-
-    Parameters
-    ----------
-    cfg :
-
-        Class object of RunConfig class which was created at the
-        beginning of the simulation.
-
-    Uo : 1D array
-
-        The dependent variable from time level (n) within the domain.
-
-    Courant : float
-
-        Courant number (entered as user input in file).
-
-    Returns
-    -------
-    U : 1D array
-
-        The dependent variable calculated at time level (n+1) within the
-        entire domain.
-    """
-    shapeU = Uo.shape  # Obtain Dimension
-    if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
-
-    if cfg.Model.upper() == "FO_WAVE":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    elif cfg.Model.upper() == "INV_BURGERS":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    elif cfg.Model.upper() == "VISC_BURGERS":
-        U = Uo.copy()  # Initialize U
-        A = Uo.copy()  # Initialize A
-        E = Uo*Uo/2
-        A[1:-1] = (E[2:]-E[1:-1]) / (Uo[2:]-Uo[1:-1])
-        U[1:-1] = (
-            Uo[1:-1]
-            - 0.5*Courant*(A[2:]+A[0:-2])*(Uo[1:-1]-Uo[0:-2])
-            + diffX*(Uo[2:] - 2.0*Uo[1:-1] + Uo[0:-2])
-            )
-
-    return U
-#   ***********************************************************************
-
-
-def DuFortFrankel(cfg, Uo, Uo2, Courant, diffX):
-    """Return the numerical solution of dependent variable in the model eq.
-
-    This routine uses the explicit DuFort-Frankel method
-    to obtain the solution of the
-    1D non-linear viscous Burgers equation.
-
-    Call signature:
-
-        DuFortFrankel(cfg, Uo, Uo2, Courant, diffX)
-
-    Parameters
-    ----------
-    cfg :
-
-        Class object of RunConfig class which was created at the
-        beginning of the simulation.
-
-    Uo : 1D array
-
-        The dependent variable from time level (n) within the domain.
-
-    Courant : float
-
-        Courant number (entered as user input in file).
-
-    Returns
-    -------
-    U : 1D array
-
-        The dependent variable calculated at time level (n+1) within the
-        entire domain.
-    """
-    shapeU = Uo.shape  # Obtain Dimension
-    if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
-
-    if cfg.Model.upper() == "FO_WAVE":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    elif cfg.Model.upper() == "INV_BURGERS":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    elif cfg.Model.upper() == "VISC_BURGERS":
-        iMax, = shapeU
-        U = Uo.copy()  # Initialize U
-        E = Uo*Uo/2
-        for i in range(1, iMax):
-            A = (E[i+1]-E[i])/(Uo[i+1]-Uo[i])
-            c = A*Courant
-            U[i] = (
-                ((1.0 - 2.0*diffX) / (1.0 + 2.0*diffX))*Uo2[i]
-                + ((c + 2.0*diffX) / (1.0 + 2.0*diffX))*Uo[i-1]
-                - ((c - 2.0*diffX) / (1.0 + 2.0*diffX))*Uo[i+1]
-                )
-
-    return U
-#   ***********************************************************************
-
-
-def BTBCS(cfg, Uo, Courant, diffX, Accuracy):
-    """Return the numerical solution of dependent variable in the model eq.
-
-    This routine uses the  implicit backward time central spacing (BTBCS)
-    method with backward differencing approximation for the convective term
-    to obtain the solution of the
-    1D non-linear viscous Burgers equation.
-
-    Call signature:
-
-        BTBCS(cfg, Uo, Courant, diffX, Accuracy)
-
-    Parameters
-    ----------
-    cfg :
-
-        Class object of RunConfig class which was created at the
-        beginning of the simulation.
-
-    Uo : 1D array
-
-        The dependent variable from time level (n) within the domain.
-
-    Courant : float
-
-        Courant number (entered as user input in file).
-
-    Returns
-    -------
-    U : 1D array
-
-        The dependent variable calculated at time level (n+1) within the
-        entire domain.
-    """
-    from nanpack.backend.initialize import init
-
-    shapeU = Uo.shape  # Obtain Dimension
-    if len(shapeU) == 2:
-        raise Exception("This formulation is only available for 1D first\
- order wave equation or the inviscid Burgers equation in this version.")
-
-    if cfg.Model.upper() == "FO_WAVE":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    elif cfg.Model.upper() == "INV_BURGERS":
-        raise Exception("This formulation is not available for WAVE\
- equation in this version.")
-
-    if Accuracy.lower() == "first-order":
-        th = {
-            "1": 1.0,
-            "2": 1.0,
-            "3": 0.0,
-            "4": 0.0
-            }
-    elif Accuracy.lower == "second-order":
-        th = {
-            "1": 2.0,
-            "2": 3.0/2,
-            "3": 0.0,
-            "4": -1.0/2
-            }
-    elif Accuracy.lower == "third-order":
-        th = {
-            "1": 1.0,
-            "2": 1.0/2,
-            "3": 1.0/3,
-            "4": -1.0/6
-            }
-    else:
-        raise Exception("Invalid input for argument - Accuracy")
-
-    iMax, = shapeU
-    E = Uo*Uo/2
-    A, AA, BB, CC, DD, UU = init(Uo, 5)
-    A[1:-1] = (E[2:]-E[0:-2]) / (Uo[2:]-Uo[0:-2])
-    AA = [(-diffX - th(1)*A[i]*Courant) for i in range(iMax)]
-    BB = [(1.0 + 2.0*diffX + th(2)*A[i]*Courant) for i in range(iMax)]
-    CC = [(-diffX + th(3)*A[i]*Courant) for i in range(iMax)]
-    DD = [(Uo[i] + th(4)*A[i]*Courant*Uo[i-2]) for i in range(2, iMax)]
-    UU = Uo.copy()
-    U = TridiagonalSolver(iMax, AA, BB, CC, DD, UU)
-
-    return U

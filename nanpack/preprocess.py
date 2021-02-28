@@ -38,13 +38,11 @@
 #
 #   ***********************************************************************
 
-import configparser
-from .backend.checkconfig import CheckSections
-from .backend.exceptions import InputFileError
-# from .backend.exceptions import InvalidValueError
+from .backend._readconfig import _ReadConfig
+from .backend.checkconfig import CheckSections, CheckSetupSection
 
 
-class RunConfig:
+class RunConfig(_ReadConfig):
     """Class to read inputs from configuration file and set-up variables.
 
     This class is depenedent on the configparser package to read the
@@ -75,7 +73,6 @@ class RunConfig:
         Parameters
         ----------
         InFileName: str
-
             Path to configuration file.
         """
         self.File = InFileName
@@ -86,102 +83,66 @@ class RunConfig:
         print()
         print("Searching for simulation configuration file in path:")
         print(f'"{InFileName}"')
-        self.config = configparser.ConfigParser()
-        dataset = self.config.read(InFileName)
-        if dataset:
-            print("SUCCESS: Configuration file parsing.")
-        else:
-            raise InputFileError("FileNotFound", InFileName)
+        super().__init__(InFileName)
 
-        # Upon initialization -
-        #       1. check - if all sections exist
-        #       2. access numerical setup and and check inputs
-        print("Checking whether all sections are included in config file.")
-        CheckSections(self.config, self.File)
-        # Access all other sections and set variables.
-        self.ConfigSolverSetUp()
-        self.ConfigGrid()
-        self.ConfigInitial()
-        self.ConfigBC()
-        self.ConfigConstants()
-        self.ConfigSimStop()
-        self.ConfigOutput()
+        self._CheckSections()  # Check sections in config file
+        print("SUCCESS: Configuration file parsing.")
+        print("Accessing numerical setup. Completed")
+        print("Accessing domain geometry configuration: Completed")
+        print("Accessing meshing configuration: Completed.")
+        print("Accessing initial condition settings: Completed.")
+        print("Accessing boundary condition settings: Completed")
+        print("Accessing constant data: Completed.")
+        print("Accessing simulation stop settings: Completed.")
+        print("Accessing settings for storing outputs: Completed.")
+
+        # Calculate required quantities.
+        self.Mesh()
+        self.Initial()
+        self.BC()
+        self.SimStop()
         self.DisplayConfig()
 
-    def ConfigSolverSetUp(self):
-        """Access numerical setup inputs from the SETUP section.
-
-        Call signature :
-
-            self.SolverSetUp()
-        """
-        from .backend.checkconfig import CheckSetupSection
-
-        print("Checking numerical setup.")
-        self.ExpId = self.config['SETUP']['EXPID']
-        self.UnitSystem = self.config['SETUP']['UNITS_SYSTEM']
-        self.Description = self.config['SETUP']['DESCRIPTION']
-        self.State = self.config['SETUP']['STATE']
-        self.Model = self.config['SETUP']['MODEL']
-        self.Scheme = self.config['SETUP']['SCHEME']
-        self.Dimension = self.config['SETUP']['DIMENSION']
+    def _CheckSections(self):
+        """Check sections in the configuration file."""
+        # Upon initialization -
+        #       1. check - if all sections exist
+        CheckSections(self.config, self.File)
         CheckSetupSection(self.config, self.State, self.Model,
                           self.Dimension, self.File)
 
-    def ConfigGrid(self):
+    def Mesh(self):
         """Access meshing inputs from the DOMAIN and MESH sections.
 
         Call signature :
-
-            self.GridGen()
+            self.Mesh()
         """
-        from . import grid
-        # ***************** DOMAIN SPEC *****************
-        self.Length = float(self.config['DOMAIN']['LENGTH'])
-        self.Height = float(self.config['DOMAIN']['HEIGHT'])
-        print("Accessing domain geometry configuration: Completed")
-        # **************** MESH SPEC *****************
-        GridfromFile = self.config['MESH']['GRID_FROM_FILE?']
-        if GridfromFile.upper() == 'YES':
-            self.GridFName = self.config['MESH']['GRID_FNAME']
-            if self.GridFName.lower() == 'none':
-                raise InputFileError("FileNotFound", self.GridFName)
-            else:
-                print("Functionality not available at this time")
-                print("Proceeding using other inputs.")
-        GridAutoCalc = self.config['MESH']['GRID_AUTO_CALC?']
-        if GridAutoCalc.upper() == 'YES':
-            self.dX = float(self.config['MESH']['dX'])
-            self.dY = float(self.config['MESH']['dY'])
-            print("Accessing meshing configuration: Completed.")
-            self.iMax, self.jMax = grid.ComputeGridPoints(self.Dimension,
-                                                          self.Length,
-                                                          self.dX,
-                                                          self.Height,
-                                                          self.dY)
-        elif GridAutoCalc.upper() == 'NO':
-            self.iMax = int(self.config['MESH']['iMax'])
-            self.jMax = int(self.config['MESH']['jMax'])
-            print("Accessing meshing configuration: Completed.")
-            self.dX, self.dY = grid.ComputeGridSteps(self.Dimension,
+        from . import mesh
+
+        if self.GridAutoCalc.upper() == 'YES':
+            self.iMax, self.jMax = mesh.CalcGridPoints(self.Dimension,
+                                                       self.Length,
+                                                       self.dX,
+                                                       self.Height,
+                                                       self.dY)
+        elif self.GridAutoCalc.upper() == 'NO':
+            self.dX, self.dY = mesh.CalcGridStepsize(self.Dimension,
                                                      self.Length,
                                                      self.iMax,
                                                      self.Height,
                                                      self.jMax)
 
-    def ConfigInitial(self):
+    def Initial(self):
         """Access intial condition inputs from the IC section.
 
         Returns the dependent variables with the initial values.
 
         Call signature :
-
             RunConfig.Initial()
 
         Returns
         -------
         U: 1D or 2D array
-
             Initial conditions for the dependent variable.
         """
         import nanpack.backend.initialize as init
@@ -191,56 +152,24 @@ class RunConfig:
         # whether cold-start or restart.
         self.U = init.InitialCondition(self.Dimension, self.iMax,
                                        self.jMax)
-        self.StartOpt = self.config['IC']['START_OPT']
-        if self.StartOpt.upper() == 'RESTART':
-            print("Functionality does not exists in this version.")
-            pass
-        if 1 == 0:
-            self.RestartFile = self.config['IC']['RESTART_FILE']
-            print("Accessing initial condition settings: Completed.")
-            if self.RestartFile.lower() == "none":
-                raise InputFileError("FileNotFound", self.RestartFile)
-                ch = int(input("Do you want to proceed with:\
-\n\t1. COLD START conditions, or\n\t2. Use a system default\
- RESTART filename?\nENTER 1 or 2.\n"))
-                if ch == 1:
-                    # Initialize with zero
-                    self.StartOpt = "COLD-START"
-                    self.U = init.InitialCondition(self.Dimension,
-                                                   self.iMax, self.jMax)
-                elif ch == 2:
-                    # Use defualt file name
-                    # InitFile = './output/restart.dat'
-                    print("This functionality is not available at this\
- time.")
-                    print("Proceeding to solve using cold-start\
- conditions.")
-
-            print("Accessing initial condition settings: Completed.")
-
         return self.U
 
-    def ConfigBC(self):
+    def BC(self):
         """Access boundary condition inputs from the BC section.
 
         Update the boundary conditions of the dependent variable and
         return.
 
         Call signature :
-
             RunConfig.BC()
 
         Returns
         -------
         U: 2D array
-
             Updated boundary conditions for the dependent variable.
         """
         import nanpack.backend.boundary as bound
         # *********** BOUNDARY CONDITIONS *************
-        self.BCfromFile = self.config['BC']['BC_FROM_FILE?']
-        self.BCFileName = self.config['BC']['BC_FILE_NAME']
-        print("Accessing boundary condition settings: Completed")
         if self.BCfromFile.upper() == 'YES':
             self.BC = bound.ReadBCfromFile(self.BCFileName)
             # Call function to assign 2D BC
@@ -251,84 +180,30 @@ class RunConfig:
 
         return self.U
 
-    def ConfigConstants(self):
-        """Access constant inputs from the CONST section.
-
-        Call signature :
-
-            RunConfig.Constants()
-        """
-        # *********** CONSTANT COEFFICIENTS ***********
-        self.CFL = float(self.config['CONST']['CFL'])
-        self.conv = float(self.config['CONST']['CONV'])
-        self.diff = float(self.config['CONST']['DIFF'])
-        print("Accessing constant data: Completed.")
-
-    def ConfigSimStop(self):
+    def SimStop(self):
         """Access simulation stop setting inputs from the STOP section.
 
         Call signature :
-
-            RunConfig.ConfigSimStop()
+            RunConfig.SimStop()
         """
-        import nanpack.grid as grid
+        import nanpack.mesh as mesh
         # *********** SIM STOP SETTINGS ***********
-        self.totTime = float(self.config['STOP']['SIM_TIME'])
-        if self.State.upper() == 'STEADY':
-            self.ConvCrit = float(self.config['STOP']['CONV_CRIT'])
-        elif self.State.upper() == 'TRANSIENT':
-            self.ConvCrit = -0.01
-        nMax = int(self.config['STOP']['nMAX'])
         # Execute this block for:
         # diffusion eq., first-order wave eq. and Burgers eq.
-        if not self.Model.upper() == 'POISSONS':
-            self.dT = grid.CalcTimeStep(self.CFL, self.diff, self.conv,
+        if not self.Model.upper() == 'LAPLACE':
+            self.dT = mesh.CalcTimeStep(self.CFL, self.diff, self.conv,
                                         self.dX, self.dY,
                                         self.Dimension, self.Model)
-            self.nMax = grid.CalcMaxSteps(self.State, nMax, self.dT,
+            self.nMax = mesh.CalcMaxSteps(self.State, self.nMax, self.dT,
                                           self.totTime)
-        # Execute this block for Poissons eq.
-        elif self.Model.upper() == 'POISSONS':
-            self.nMax = nMax
-
-        print("Accessing simulation stop settings: Completed.")
-
-    def ConfigOutput(self):
-        """Access output configurations from the OUTPUT section.
-
-        Call signature :
-
-            RunConfig.ConfigOutput()
-        """
-        # ************* OUTPUT INFORMATION *************
-        self.HistFileName = self.config['OUTPUT']['HIST_FILE_NAME']
-        self.RestartFile = self.config['OUTPUT']['RESTART_FNAME']
-        self.OutFileName = self.config['OUTPUT']['RESULT_FNAME']
-        self.nWrite = int(self.config['OUTPUT']['WRITE_EVERY'])
-        self.nDisplay = int(self.config['OUTPUT']['DISPLAY_EVERY'])
-        self.SaveforAnim = self.config['OUTPUT']['SAVE_FOR_ANIM?']
-        if self.SaveforAnim.upper() == 'YES':
-            self.nAnime = int(self.config['OUTPUT']['SAVE_EVERY'])
-        self.Save1DOut = self.config['OUTPUT']['SAVE_1D_OUTPUT?']
-        if self.Save1DOut.upper() == 'YES':
-            nodeX = None
-            nodeY = None
-            try:
-                nodeX = self.config['OUTPUT']['X']
-                self.nodes = [float(node) for node in nodeX.split(',')]
-                self.PrintNodesDir = 'X'
-            except:
-                nodeY = self.config['OUTPUT']['Y']
-                self.nodes = [float(node) for node in nodeY.split(',')]
-                self.PrintNodesDir = 'Y'
-            self.Out1DFName = self.config['OUTPUT']['SAVE1D_FILENAME']
-        print("Accessing settings for storing outputs: Completed.")
+        # Execute this block for Laplace's eq.
+        elif self.Model.upper() == 'LAPLACE':
+            self.nMax = self.nMax
 
     def DisplayConfig(self):
         """Display the configuration to the user for verification.
 
         Call signature :
-
             RunConfig.DisplayConfig()
         """
         # ************* PRINT CONFIGURATIONS *************
@@ -345,7 +220,7 @@ class RunConfig:
         print(f'    dX                          {self.dX:5.3f}')
         if self.Dimension.upper() == '2D':
             print(f'    dY                          {self.dY:5.3f}')
-        if not self.Model == 'POISSONS':
+        if not self.Model == 'LAPLACE':
             print(f'TIME STEP                       {self.dT:5.3f}')
         print('GRID POINTS')
         print(f'    along X                     {self.iMax}')
@@ -395,50 +270,112 @@ def CourantNumber(CFL, Dimension):
     return convX, convY
 
 
-def DiffusionNumbers(Dimension, diff, dT, dX, dY=None):
+def DiffusionNumbers(Dimension, diff, dT, dX, dY=None, Scaling=False):
     """Return the diffusion numbers along X and Y directions.
 
-    Call signature:
+    Diffusion number is expressed as
+        d_x = (nu)dT/dX^2
+    In non-dimensional equations, diffusion number is
+        d_x = (dT*)/(dX*^2)
 
+    Call signature:
         DiffusionNumbers(Dimension, diff, dT, dX, dY)
 
     Parameters
     ----------
     Dimension : string
-
         Dimension of the simulation domain.
         Available Options are "1D" or "2D"
-
     diff: float
-
         Constant coefficient in the diffusion equation, such as kinematic
         viscosity.
-
     dT: float
-
         Time step size.
-
     dX: float
-
         Grid step size in x-direction.
-
     dY: float
-
         Grid step size in y-direction. Default=None for 1D applications.
+    Scaling: bool, Default=False
+        User choice for returning dimensional or non-dimensional diffusion
+        numbers.
 
     Returns
     -------
     diffX, diffY : float values
-
         Diffusion numbers along X and Y axis, respectively.
     """
-    dX2 = dX*dX
-    # diffusion coefficient for the x term.
-    diffX = diff*dT/dX2
-    diffY = None
-    if Dimension.upper() == "2D":
-        dY2 = dY*dY
-        diffY = diff*dT/dY2  # diffusion coefficient for y term.
-    print("Calculating diffusion numbers: Completed.")
+    if Scaling is False:
+        dX2 = dX*dX
+        # Diffusion coefficient for the x term.
+        diffX = diff*dT/dX2
+        diffY = None
+        if Dimension.upper() == "2D":
+            dY2 = dY*dY
+            diffY = diff*dT/dY2  # diffusion coefficient for y term.
+        print("Calculating diffusion numbers: Completed.")
+
+    elif Scaling is True:
+        dX2 = dX*dX
+        diffX = dT/dX2
+        diffY = None
+        if Dimension.upper() == "2D":
+            dY2 = dY*dY
+            diffY = dT/dY2
 
     return diffX, diffY
+
+
+def NonDimensionalizeTime(dTime, RefLength, Diff):
+    """Return the non-dimensionalized time or time step size.
+
+    Using the expression:
+        t* = (nu)(t/L^2)
+
+    Call signature:
+        NondimensionalizeTime(dTime, RefLength, Diff)
+
+    Parameters
+    ----------
+    dTime : float
+        Dimensional time or the time step.
+    RefLength: float
+        Reference or characteristic length.
+    Diff: float
+        Diffusion coefficient.
+
+    Returns
+    -------
+    Tstar : float
+        Non-dimensional quantity of time.
+    """
+    from .backend.dimensionalize import NonDimensionalize
+    nd = NonDimensionalize()
+    Tstar = nd.ndTime(dTime, RefLength, Diff)
+    return Tstar
+
+
+def NonDimensionalizeMesh(dXgrid, RefLength):
+    """Return the non-dimensionalized grid locations or grid step size.
+
+    Using the expression:
+        x* = x/L
+
+    Call signature:
+        NondimensionalizeTime(dTime, refLength, Diff)
+
+    Parameters
+    ----------
+    dXgrid : float
+        Dimensional grid points locations or grid step size.
+    RefLength: float
+        Reference or characteristic length.
+
+    Returns
+    -------
+    Xstar : float
+        Non-dimensional quantity of grid.
+    """
+    from .backend.dimensionalize import NonDimensionalize
+    nd = NonDimensionalize()
+    Xstar = nd.ndGrid(dXgrid, RefLength)
+    return Xstar

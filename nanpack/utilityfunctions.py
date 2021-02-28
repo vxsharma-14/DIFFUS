@@ -1,7 +1,7 @@
-"""Not a public module in version 1.0.0-alpha4."""
+"""Not a public function in version 1.0.0a4."""
 #   ***********************************************************************
 #
-#   FILE         clustering.py
+#   FILE         utilityfunctions.py
 #
 #   AUTHOR       Dr. Vishal Sharma
 #
@@ -39,23 +39,54 @@
 #   ***********************************************************************
 
 
-def ExternalFlowClustering(Xi, Eta, Beta, Height):
-    """Return the clustered grid near the X-lo or Y-lo wall boundaries.
+def EntropyCorrectionFunction(Alpha, Eps):
+    """Return the value of the entropy correction term.
 
-    This function is not complete or tested for accuracy.
+    Solve equation 6-127 or Equation 6-121) defined in CFD Vol. 1
+    by Hoffmann.
+
+    Call signature:
+
+        EntropyCorrectionFunction(Alpha, Eps)
+
+    Parameters
+    ----------
+    Alpha : float
+
+        The entroopy correction is a function of alpha to prevent the
+        difficulty that may appear when alpha becomes zero in TVD
+        formulation.
+
+    Eps : float
+
+        A positive constant similar to the damping coefficient. Its value
+        must be selected within the range 0f 0.0 to 0.125.
+
+    Returns
+    -------
+    si : float
+
+        Entropy correction term.
     """
-    shapeX = Xi.shape()
-    iMax, jMax = shapeX
+    AlphaAbs = abs(Alpha)
+    if AlphaAbs >= Eps:
+        si = AlphaAbs
+    else:
+        si = (Alpha*Alpha + Eps*Eps)/(2*Eps)
 
-    # If clustering is required near Y = 0.0 surface in positive Y
-    # direction.
-    Beta1 = (Beta+1.0) / (Beta-1.0)
+    return si
 
-    X = Xi.copy()
-    Y = Eta.copy()
-    Y[:, :] = (
-        Height * ((Beta+1.0) - (Beta-1.0)) * Beta1**(1.0-Eta[:, :])
-        / (Beta1**(1.0-Eta[:, :]) + 1.0)
-        )
 
-    return X, Y
+def _CalcAlpha(E1, E2, dU, U1, U2):
+    """Return the results of Equation 6-128 in CFD Vol.1 by Hoffmann."""
+    return ((E1 - E2)/dU if dU != 0 else 0.5*(U1 + U2))
+
+
+def _CalcUi(U2, U1):
+    """Return the backward differencing result of the dependent var."""
+    return (U2 - U1)
+
+
+def _CalcE(U):
+    """Return the result of the non-linear variable E = 0.5U**2."""
+    return (0.5*U*U)

@@ -51,8 +51,9 @@ class NumericalMethodError(Exception):
 class DimensionError(Exception):
     """Raise exception for wrong dimension and model/method combination."""
 
-    def __init__(self, dim, model):
-        self.message = f"Dimension '{dim}' input invalid for the {model}\
+    def __init__(self, dim, model, scheme):
+        self.message = f"Dimension '{dim}' of dependent variable is\
+ invalid. In this version, {scheme} method can solve {dim} {model}\
  equation."
         super().__init__(self.message)
 
@@ -73,9 +74,10 @@ class InputFileError(Exception):
 
     def __init__(self, which, file=None):
         if which == "NoInput":
-            self.message = "No input files provided."
+            msg = "No input files provided."
         elif which == "FileNotFound":
-            self.message = f'File "{file}" not found in the directory.'
+            msg = f'File "{file}" not found in the directory.'
+        self.message = msg
         super().__init__(self.message)
 
 
@@ -101,4 +103,21 @@ class TVDLimiterInputError(Exception):
 
     def __init__(self, lmtr, limfunc):
         self.msg = f"Invalid TVD limiter {lmtr} provided for {limfunc}."
+        super().__init__(self.msg)
+
+
+class TVDLimiterFunctionInputError(Exception):
+    """Raise exception when an invalid Limiter function is entered."""
+
+    def __init__(self, limfunc):
+        self.msg = f"Invalid TVD limiter function {limfunc} provided in\
+ the call to SecondOrderTVD() function."
+        super().__init__(self.msg)
+
+
+class MeshingInputError(Exception):
+    """Raise exception for invalid inputs in the  grid functions."""
+
+    def __init__(self, arg, text):
+        self.msg = f"{arg} : {text}."
         super().__init__(self.msg)

@@ -74,32 +74,24 @@ def HeatConduction(X, Y, T1, T2, T3, T4, Inf):
                                        T1
 
     Call signature:
-
         HeatConduction(X, Y, T1, T2, T3, T4, Inf)
 
     Parameters
     ----------
     X, Y: 2D array
-
         Mesh data containing X and Y locations at all grid points.
-
     T1, T2, T3, T4: float
-
         Boundary temperatures (in degree Kelvin units) as specified in the
         above schematic.
-
     Inf: int
-
         This number corresponds to infinity in the summation series in
         exact solution.
-
         Start with a smaller number (approx. 20) and user larger value
         if the solution is not converged when Inf=20.
 
     Returns
     -------
     Tanaly: 2D array
-
         Analytical solution of the steady state heat conduction within the
         entire domain.
     """
@@ -218,30 +210,20 @@ def ParallelPlateFlow(Uref, X, nu, t, Inf):
     """Return analytical solution of the velocity between parallel plates.
 
     Call signature:
-
         ParallelPlateFlow(Uref, X, nu, t, Inf)
 
     Parameters
     ----------
     Uref: float
-
         Initial velocity of the lower plate.
-
     X: 1D array
-
         Mesh data containing X locations at all grid points between the
         plates.
-
     nu: float
-
         Kinematic viscosity of the fluid in the governing N-S equation.
-
     t: float
-
         Time at which the analytical solution is required.
-
     Inf: int
-
         This number corresponds to infinity in the summation series in
         exact solution. Use its value as 20 which is a tested value for
         converged results.
@@ -249,7 +231,6 @@ def ParallelPlateFlow(Uref, X, nu, t, Inf):
     Returns
     -------
     Ua: 1D array
-
         Analytical solution of the fluid flow distribution between the
         plates.
     """
@@ -276,31 +257,25 @@ def ParallelPlateFlow(Uref, X, nu, t, Inf):
     Ua[-1] = 0.0
 
     return Ua
-#   ***********************************************************************
 
 
 def ViscousBurgersSolution(X, t):
     """Return the analytical solution of a stationary Burgers equation.
 
     Call signature:
-
         ViscousBurgersSolution(X, t)
 
     Parameters
     ----------
     X: 1D array
-
         Mesh data containing X locations at all grid points within the
         domain.
-
     t: float
-
         Time at which the analytical solution is required.
 
     Returns
     -------
     Uana: 1D array
-
         Analytical solution of the viscous Burgers equation.
     """
     import math

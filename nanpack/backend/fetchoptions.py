@@ -63,7 +63,7 @@ class _FetchOptions:
     def ModelOptions(self):
         """Return a list of allowed inputs for MODEL key in config file."""
         self.options = ["DIFFUSION",
-                        "POISSONS",
+                        "LAPLACE",
                         "FO_WAVE",
                         "INV_BURGERS",
                         "VISC_BURGERS"]
